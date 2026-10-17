@@ -1,0 +1,1747 @@
+-- ==========================================================
+-- MODERN MENU + ESP + NAMETAGS + FPS + THEMES + TRAILS + SKY + BRIGHT PARTICLES + ANTI-AFK
+-- LocalScript в StarterPlayer > StarterPlayerScripts
+-- ==========================================================
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local Stats = game:GetService("Stats")
+
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+
+local PHOTO_ID = "rbxassetid://124349171744795"
+
+-- ============ ТЕМЫ ============
+local THEMES = {
+    {
+        name = "Red",
+        Bg        = Color3.fromRGB(12, 12, 15),
+        BgGrad    = Color3.fromRGB(28, 28, 34),
+        Panel     = Color3.fromRGB(22, 22, 26),
+        Accent    = Color3.fromRGB(220, 30, 40),
+        AccentGlow= Color3.fromRGB(255, 70, 80),
+        Text      = Color3.fromRGB(240, 240, 245),
+        SubText   = Color3.fromRGB(170, 170, 185),
+        Off       = Color3.fromRGB(55, 55, 65),
+        isLight   = false,
+    },
+    {
+        name = "Pink",
+        Bg        = Color3.fromRGB(252, 240, 246),
+        BgGrad    = Color3.fromRGB(255, 250, 253),
+        Panel     = Color3.fromRGB(255, 255, 255),
+        Accent    = Color3.fromRGB(255, 90, 170),
+        AccentGlow= Color3.fromRGB(255, 140, 200),
+        Text      = Color3.fromRGB(60, 25, 45),
+        SubText   = Color3.fromRGB(150, 100, 135),
+        Off       = Color3.fromRGB(235, 218, 228),
+        isLight   = true,
+    },
+    {
+        name = "Green",
+        Bg        = Color3.fromRGB(10, 14, 10),
+        BgGrad    = Color3.fromRGB(24, 32, 24),
+        Panel     = Color3.fromRGB(20, 26, 20),
+        Accent    = Color3.fromRGB(50, 200, 90),
+        AccentGlow= Color3.fromRGB(100, 255, 140),
+        Text      = Color3.fromRGB(235, 245, 235),
+        SubText   = Color3.fromRGB(150, 175, 150),
+        Off       = Color3.fromRGB(50, 60, 50),
+        isLight   = false,
+    },
+}
+local currentThemeIndex = 1
+local C = THEMES[currentThemeIndex]
+
+-- ============ НАСТРОЙКИ ============
+local antiAfkEnabled = false
+
+local OUTLINE_COLORS = {
+    { name = "Белый",   color = Color3.fromRGB(255, 255, 255) },
+    { name = "Красный", color = Color3.fromRGB(255, 60, 60) },
+    { name = "Синий",   color = Color3.fromRGB(60, 150, 255) },
+    { name = "Зелёный", color = Color3.fromRGB(80, 255, 120) },
+    { name = "Жёлтый",  color = Color3.fromRGB(255, 230, 60) },
+    { name = "Розовый", color = Color3.fromRGB(255, 130, 220) },
+}
+local currentOutlineIndex = 1
+local showDistance = false
+
+-- ============ ТРЕЙЛЫ ============
+local trailsEnabled = false
+local TRAIL_COLORS = {
+    { name = "Красный",    color = Color3.fromRGB(255, 60, 60) },
+    { name = "Синий",      color = Color3.fromRGB(60, 150, 255) },
+    { name = "Зелёный",    color = Color3.fromRGB(80, 255, 120) },
+    { name = "Жёлтый",     color = Color3.fromRGB(255, 230, 60) },
+    { name = "Розовый",    color = Color3.fromRGB(255, 130, 220) },
+    { name = "Белый",      color = Color3.fromRGB(255, 255, 255) },
+    { name = "Фиолетовый", color = Color3.fromRGB(180, 80, 255) },
+}
+local currentTrailColorIndex = 1
+local trailColor = TRAIL_COLORS[currentTrailColorIndex].color
+
+local TRAIL_LENGTHS = {
+    { name = "Короткие", lifetime = 0.3, width = 0.4 },
+    { name = "Средние",  lifetime = 0.7, width = 0.6 },
+    { name = "Длинные",  lifetime = 1.4, width = 0.9 },
+}
+local currentTrailLengthIndex = 2
+local trailLength = TRAIL_LENGTHS[currentTrailLengthIndex]
+
+-- ============ НЕБО ============
+local SKY_PRESETS = {
+    {
+        name = "День",
+        Bk = "rbxassetid://159454299", Dn = "rbxassetid://159454296",
+        Ft = "rbxassetid://159454293", Lf = "rbxassetid://159454286",
+        Rt = "rbxassetid://159454300", Up = "rbxassetid://159454288",
+        AtmosDensity = 0.3, AtmosOffset = 0.25, AtmosColor = Color3.fromRGB(199, 199, 199),
+    },
+    {
+        name = "Закат",
+        Bk = "rbxassetid://3215277", Dn = "rbxassetid://3215279",
+        Ft = "rbxassetid://3215278", Lf = "rbxassetid://3215276",
+        Rt = "rbxassetid://3215275", Up = "rbxassetid://3215274",
+        AtmosDensity = 0.4, AtmosOffset = 0.1, AtmosColor = Color3.fromRGB(255, 170, 100),
+    },
+    {
+        name = "Ночь",
+        Bk = "rbxassetid://271042516", Dn = "rbxassetid://271077243",
+        Ft = "rbxassetid://271042556", Lf = "rbxassetid://271042310",
+        Rt = "rbxassetid://271042467", Up = "rbxassetid://271077958",
+        AtmosDensity = 0.4, AtmosOffset = 0.2, AtmosColor = Color3.fromRGB(50, 50, 80),
+    },
+    {
+        name = "Космос",
+        Bk = "rbxassetid://7636162599", Dn = "rbxassetid://7636162599",
+        Ft = "rbxassetid://7636162599", Lf = "rbxassetid://7636162599",
+        Rt = "rbxassetid://7636162599", Up = "rbxassetid://7636162599",
+        AtmosDensity = 0, AtmosOffset = 0, AtmosColor = Color3.fromRGB(0, 0, 0),
+    }
+}
+local currentSkyIndex = 1
+
+local skyObj = Lighting:FindFirstChildOfClass("Sky") or Instance.new("Sky", Lighting)
+local atmoObj = Lighting:FindFirstChildOfClass("Atmosphere") or Instance.new("Atmosphere", Lighting)
+
+local function applySky(preset)
+    skyObj.SkyboxBk = preset.Bk
+    skyObj.SkyboxDn = preset.Dn
+    skyObj.SkyboxFt = preset.Ft
+    skyObj.SkyboxLf = preset.Lf
+    skyObj.SkyboxRt = preset.Rt
+    skyObj.SkyboxUp = preset.Up
+    atmoObj.Density = preset.AtmosDensity
+    atmoObj.Offset = preset.AtmosOffset
+    atmoObj.Color = preset.AtmosColor
+end
+
+-- ============ ЧАСТИЦЫ (ЯРКИЕ) ============
+local particlesEnabled = false
+local bloomEnabled = false
+
+local PARTICLE_COLORS = {
+    { name = "Бело-Розовый", seq = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 100, 200))
+    }), btnColor = Color3.fromRGB(255, 150, 220) },
+    
+    { name = "Красно-Черный", seq = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+    }), btnColor = Color3.fromRGB(255, 50, 50) },
+    
+    { name = "Фиолетово-Черный", seq = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 80, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+    }), btnColor = Color3.fromRGB(180, 80, 255) },
+    
+    { name = "Сине-Голубой", seq = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 150, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 255, 255))
+    }), btnColor = Color3.fromRGB(0, 150, 255) },
+    
+    { name = "Золотой", seq = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 215, 0)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 150))
+    }), btnColor = Color3.fromRGB(255, 215, 0) },
+}
+local currentParticleColorIndex = 1
+
+local PARTICLE_DENSITIES = {
+    { name = "Мало", rate = 30 },
+    { name = "Средне", rate = 100 },
+    { name = "Много", rate = 250 },
+}
+local currentParticleDensityIndex = 2
+
+-- УВЕЛИЧЕНЫ РАЗМЕРЫ ДЛЯ ЯРКОСТИ
+local PARTICLE_SIZES = {
+    { name = "Мелкие", size = 1.0 },
+    { name = "Средние", size = 2.5 },
+    { name = "Крупные", size = 5.0 },
+}
+local currentParticleSizeIndex = 2
+
+local bloom = Lighting:FindFirstChildOfClass("BloomEffect") or Instance.new("BloomEffect", Lighting)
+bloom.Intensity = 0
+bloom.Size = 24
+bloom.Threshold = 0.8
+
+local particlesPart = workspace:FindFirstChild("SpaceParticlesPart")
+if not particlesPart then
+    particlesPart = Instance.new("Part")
+    particlesPart.Name = "SpaceParticlesPart"
+    particlesPart.Size = Vector3.new(30, 30, 30)
+    particlesPart.Transparency = 1
+    particlesPart.Anchored = true
+    particlesPart.CanCollide = false
+    particlesPart.CanQuery = false
+    particlesPart.CanTouch = false
+    particlesPart.Parent = workspace
+end
+
+local emitter = particlesPart:FindFirstChildOfClass("ParticleEmitter") or Instance.new("ParticleEmitter", particlesPart)
+emitter.Texture = "rbxassetid://243660364" -- ЯРКИЙ БЛИК
+emitter.LightEmission = 1 
+emitter.LightInfluence = 0
+emitter.Rate = 0
+emitter.Lifetime = NumberRange.new(3, 6)
+emitter.Speed = NumberRange.new(2, 5)
+emitter.SpreadAngle = Vector2.new(180, 180)
+emitter.EmissionDirection = Enum.NormalId.Top
+emitter.Rotation = NumberRange.new(0, 360)
+emitter.RotSpeed = NumberRange.new(-90, 90)
+emitter.Acceleration = Vector3.new(0, 0.5, 0)
+emitter.ZOffset = 5 -- Рендерится поверх всего
+emitter.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 1),
+    NumberSequenceKeypoint.new(0.1, 0), -- Быстро появляется
+    NumberSequenceKeypoint.new(0.9, 0), -- Долго висит ярким
+    NumberSequenceKeypoint.new(1, 1),
+})
+
+local function updateParticles()
+    local dens = PARTICLE_DENSITIES[currentParticleDensityIndex]
+    local sz = PARTICLE_SIZES[currentParticleSizeIndex]
+    local col = PARTICLE_COLORS[currentParticleColorIndex]
+
+    emitter.Rate = particlesEnabled and dens.rate or 0
+    emitter.Size = NumberSequence.new(sz.size)
+    emitter.Color = col.seq
+    TweenService:Create(bloom, TweenInfo.new(0.3), {Intensity = bloomEnabled and 4 or 0}):Play() -- Усиленный Bloom
+end
+
+RunService.RenderStepped:Connect(function()
+    if workspace.CurrentCamera then
+        particlesPart.CFrame = workspace.CurrentCamera.CFrame
+    end
+end)
+
+-- ============ ФЛАГИ И ЛОГИКА ============
+local isMenuOpen = false
+local blurEnabled = true
+
+-- Anti-AFK
+localPlayer.Idled:Connect(function()
+    if antiAfkEnabled then
+        local vu = game:GetService("VirtualUser")
+        vu:CaptureController()
+        vu:ClickButton2(Vector2.new())
+    end
+end)
+
+-- ============ BLUR ============
+local blur = Instance.new("BlurEffect")
+blur.Size = 0
+blur.Parent = Lighting
+local function setBlur(on)
+    if not blurEnabled then
+        TweenService:Create(blur, TweenInfo.new(0.3), {Size = 0}):Play()
+        return
+    end
+    TweenService:Create(blur, TweenInfo.new(0.35, Enum.EasingStyle.Quart), {Size = on and 18 or 0}):Play()
+end
+local function setBlurEnabled(on)
+    blurEnabled = on
+    if not on then
+        TweenService:Create(blur, TweenInfo.new(0.3), {Size = 0}):Play()
+    elseif isMenuOpen then
+        TweenService:Create(blur, TweenInfo.new(0.3), {Size = 18}):Play()
+    end
+end
+
+-- ============ ESP ============
+local espEnabled = false
+local function applyHighlight(character)
+    if not character or character == localPlayer.Character then return end
+    local h = character:FindFirstChild("PlayerHighlight")
+    if not h then
+        h = Instance.new("Highlight")
+        h.Name = "PlayerHighlight"
+        h.FillColor = C.Accent
+        h.FillTransparency = 0.5
+        h.OutlineTransparency = 0
+        h.Adornee = character
+        h.Parent = character
+    end
+    h.FillColor = C.Accent
+    h.OutlineColor = OUTLINE_COLORS[currentOutlineIndex].color
+end
+local function removeHighlight(character)
+    if character then
+        local h = character:FindFirstChild("PlayerHighlight")
+        if h then h:Destroy() end
+    end
+end
+local function setESP(state)
+    espEnabled = state
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Character then
+            if espEnabled then applyHighlight(p.Character) else removeHighlight(p.Character) end
+        end
+    end
+end
+local function refreshOutlineColor()
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Character then
+            local h = p.Character:FindFirstChild("PlayerHighlight")
+            if h then
+                h.OutlineColor = OUTLINE_COLORS[currentOutlineIndex].color
+            end
+        end
+    end
+end
+
+-- ============ NAMETAGS ============
+local nametagsEnabled = false
+local function applyNametag(character)
+    if not character or character == localPlayer.Character then return end
+    if character:FindFirstChild("CustomNameTag") then return end
+    local head = character:FindFirstChild("Head")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local player = Players:GetPlayerFromCharacter(character)
+    if not head or not humanoid or not player then return end
+    humanoid.NameDisplayDistance = 0
+    humanoid.HealthDisplayDistance = 0
+
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "CustomNameTag"
+    bb.Size = UDim2.new(0, 200, 0, 40)
+    bb.StudsOffset = Vector3.new(0, 3, 0)
+    bb.AlwaysOnTop = true
+    bb.Parent = head
+
+    local label = Instance.new("TextLabel")
+    label.Name = "NameLabel"
+    label.Size = UDim2.new(1, 0, 0.6, 0)
+    label.Position = UDim2.new(0, 0, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = player.DisplayName
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextStrokeTransparency = 0
+    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    label.TextSize = 14
+    label.Font = Enum.Font.GothamBold
+    label.Parent = bb
+
+    local distLabel = Instance.new("TextLabel")
+    distLabel.Name = "DistanceLabel"
+    distLabel.Size = UDim2.new(1, 0, 0.4, 0)
+    distLabel.Position = UDim2.new(0, 0, 0.6, 0)
+    distLabel.BackgroundTransparency = 1
+    distLabel.Text = ""
+    distLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    distLabel.TextStrokeTransparency = 0
+    distLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    distLabel.TextSize = 11
+    distLabel.Font = Enum.Font.Gotham
+    distLabel.Visible = showDistance
+    distLabel.Parent = bb
+end
+local function removeNametag(character)
+    if not character then return end
+    local bb = character:FindFirstChild("CustomNameTag")
+    if bb then bb:Destroy() end
+    local head = character:FindFirstChild("Head")
+    if head and head:FindFirstChild("CustomNameTag") then head.CustomNameTag:Destroy() end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.NameDisplayDistance = 100
+        humanoid.HealthDisplayDistance = 100
+    end
+end
+local function setNametags(state)
+    nametagsEnabled = state
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Character then
+            if nametagsEnabled then applyNametag(p.Character) else removeNametag(p.Character) end
+        end
+    end
+end
+
+-- ============ ТРЕЙЛЫ ============
+local function applyTrail(character)
+    if not character or character == localPlayer.Character then return end
+    if character:FindFirstChild("PlayerTrail") then return end
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local a0 = Instance.new("Attachment", hrp); a0.Name = "TrailAttach0"; a0.Position = Vector3.new(0, 1, 0)
+    local a1 = Instance.new("Attachment", hrp); a1.Name = "TrailAttach1"; a1.Position = Vector3.new(0, -1, 0)
+    local trail = Instance.new("Trail")
+    trail.Name = "PlayerTrail"
+    trail.Attachment0 = a0
+    trail.Attachment1 = a1
+    trail.Lifetime = trailLength.lifetime
+    trail.MinLength = 0.1
+    trail.WidthScale = NumberSequence.new(trailLength.width)
+    trail.Color = ColorSequence.new(trailColor)
+    trail.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
+    trail.LightEmission = 1
+    trail.FaceCamera = true
+    trail.Parent = character
+end
+local function removeTrail(character)
+    if not character then return end
+    local trail = character:FindFirstChild("PlayerTrail")
+    if trail then trail:Destroy() end
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        for _, n in ipairs({"TrailAttach0", "TrailAttach1"}) do
+            local a = hrp:FindFirstChild(n)
+            if a then a:Destroy() end
+        end
+    end
+end
+local function setTrails(state)
+    trailsEnabled = state
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Character then
+            if trailsEnabled then applyTrail(p.Character) else removeTrail(p.Character) end
+        end
+    end
+end
+local function refreshTrailColor()
+    trailColor = TRAIL_COLORS[currentTrailColorIndex].color
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Character then
+            local trail = p.Character:FindFirstChild("PlayerTrail")
+            if trail then trail.Color = ColorSequence.new(trailColor) end
+        end
+    end
+end
+local function refreshTrailLength()
+    trailLength = TRAIL_LENGTHS[currentTrailLengthIndex]
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Character then
+            local trail = p.Character:FindFirstChild("PlayerTrail")
+            if trail then
+                trail.Lifetime = trailLength.lifetime
+                trail.WidthScale = NumberSequence.new(trailLength.width)
+            end
+        end
+    end
+end
+
+local function onCharacterAdded(character)
+    if espEnabled then applyHighlight(character) end
+    if nametagsEnabled then applyNametag(character) end
+    if trailsEnabled then applyTrail(character) end
+end
+for _, p in ipairs(Players:GetPlayers()) do p.CharacterAdded:Connect(onCharacterAdded) end
+Players.PlayerAdded:Connect(function(p) p.CharacterAdded:Connect(onCharacterAdded) end)
+
+-- ============ GUI ============
+local oldGui = playerGui:FindFirstChild("ModernMenu")
+if oldGui then oldGui:Destroy() end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ModernMenu"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = playerGui
+
+local function enableDrag(handle, target, onClick)
+    local active, startMousePos, startPos, moved
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            active = input; startMousePos = input.Position; startPos = target.Position; moved = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if active and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - startMousePos
+            if delta.Magnitude > 5 then moved = true end
+            target.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if active and input.UserInputType == active.UserInputType then
+            if not moved and onClick then onClick() end
+            active = nil
+        end
+    end)
+end
+
+-- ============ КНОПКА-ТРИГГЕР ============
+local toggleCanvas = Instance.new("CanvasGroup")
+toggleCanvas.Name = "ToggleCanvas"
+toggleCanvas.AnchorPoint = Vector2.new(0.5, 0.5)
+toggleCanvas.Size = UDim2.new(0, 220, 0, 46)
+toggleCanvas.Position = UDim2.new(0.5, 0, 0.5, 0)
+toggleCanvas.BackgroundTransparency = 1
+toggleCanvas.GroupTransparency = 0
+toggleCanvas.Parent = screenGui
+
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(1, 0, 1, 0)
+toggleBtn.BackgroundColor3 = C.Panel
+toggleBtn.BorderSizePixel = 0
+toggleBtn.Text = ""
+toggleBtn.AutoButtonColor = false
+toggleBtn.Parent = toggleCanvas
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 12)
+
+local toggleStroke = Instance.new("UIStroke")
+toggleStroke.Color = C.Accent
+toggleStroke.Thickness = 1.5
+toggleStroke.Transparency = 0.3
+toggleStroke.Parent = toggleBtn
+
+local icon = Instance.new("TextLabel")
+icon.Size = UDim2.new(0, 44, 1, 0)
+icon.Position = UDim2.new(0, 10, 0, 0)
+icon.BackgroundTransparency = 1
+icon.Text = "≡"
+icon.TextColor3 = C.AccentGlow
+icon.TextSize = 26
+icon.Font = Enum.Font.GothamBold
+icon.Parent = toggleBtn
+
+local btnText = Instance.new("TextLabel")
+btnText.Size = UDim2.new(1, -70, 1, 0)
+btnText.Position = UDim2.new(0, 56, 0, 0)
+btnText.BackgroundTransparency = 1
+btnText.Text = "Deabsolu"
+btnText.TextColor3 = C.Text
+btnText.TextSize = 16
+btnText.Font = Enum.Font.GothamBold
+btnText.TextXAlignment = Enum.TextXAlignment.Left
+btnText.Parent = toggleBtn
+
+local accentBar = Instance.new("Frame")
+accentBar.Size = UDim2.new(0, 3, 0, 22)
+accentBar.Position = UDim2.new(1, -14, 0.5, -11)
+accentBar.BackgroundColor3 = C.Accent
+accentBar.BorderSizePixel = 0
+accentBar.Parent = toggleBtn
+Instance.new("UICorner", accentBar).CornerRadius = UDim.new(1, 0)
+
+local OPEN_SIZE = UDim2.new(0, 540, 0, 310)
+
+-- ============ MENU ============
+local menu = Instance.new("Frame")
+menu.Name = "Menu"
+menu.AnchorPoint = Vector2.new(0.5, 0.5)
+menu.Position = UDim2.new(0.5, 0, 0.5, -100)
+menu.Size = UDim2.new(0, 0, 0, 0)
+menu.BackgroundColor3 = C.Bg
+menu.BorderSizePixel = 0
+menu.ClipsDescendants = true
+menu.Visible = false
+menu.Parent = screenGui
+Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 14)
+
+local menuStroke = Instance.new("UIStroke")
+menuStroke.Color = C.Accent
+menuStroke.Thickness = 1.5
+menuStroke.Transparency = 0.4
+menuStroke.Parent = menu
+
+local bgImage = Instance.new("ImageLabel")
+bgImage.Size = UDim2.new(1, 0, 1, 0)
+bgImage.BackgroundTransparency = 1
+bgImage.Image = PHOTO_ID
+bgImage.ScaleType = Enum.ScaleType.Crop
+bgImage.ImageTransparency = 0.15
+bgImage.ZIndex = 0
+bgImage.Parent = menu
+Instance.new("UICorner", bgImage).CornerRadius = UDim.new(0, 14)
+
+local darkOverlay = Instance.new("Frame")
+darkOverlay.Size = UDim2.new(1, 0, 1, 0)
+darkOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+darkOverlay.BackgroundTransparency = 0.45
+darkOverlay.BorderSizePixel = 0
+darkOverlay.ZIndex = 1
+darkOverlay.Parent = menu
+Instance.new("UICorner", darkOverlay).CornerRadius = UDim.new(0, 14)
+
+local bgGrad = Instance.new("UIGradient")
+bgGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(0.55, Color3.fromRGB(60, 60, 70)),
+    ColorSequenceKeypoint.new(1, C.Accent),
+})
+bgGrad.Rotation = 90
+bgGrad.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 0.55),
+    NumberSequenceKeypoint.new(0.5, 0.6),
+    NumberSequenceKeypoint.new(1, 0.35),
+})
+bgGrad.Parent = darkOverlay
+
+-- ============ HEADER (ВОДЯНОЙ ЗНАК С ТЕНЬЮ) ============
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1, 0, 0, 48)
+header.BackgroundTransparency = 1
+header.ZIndex = 4
+header.Parent = menu
+
+local watermarkShadow = Instance.new("TextLabel")
+watermarkShadow.Name = "WatermarkShadow"
+watermarkShadow.Size = UDim2.new(1, -100, 0, 20)
+watermarkShadow.Position = UDim2.new(0.5, 0, 0, 8) 
+watermarkShadow.AnchorPoint = Vector2.new(0.5, 0)
+watermarkShadow.BackgroundTransparency = 1
+watermarkShadow.Text = "Deabsolu"
+watermarkShadow.TextColor3 = Color3.fromRGB(0, 0, 0)
+watermarkShadow.TextTransparency = 0.4
+watermarkShadow.TextSize = 18
+watermarkShadow.Font = Enum.Font.GothamBold
+watermarkShadow.ZIndex = 4
+watermarkShadow.Parent = header
+
+local watermark = Instance.new("TextLabel")
+watermark.Name = "Watermark"
+watermark.Size = UDim2.new(1, -100, 0, 20)
+watermark.Position = UDim2.new(0.5, 0, 0, 6)
+watermark.AnchorPoint = Vector2.new(0.5, 0)
+watermark.BackgroundTransparency = 1
+watermark.Text = "Deabsolu"
+watermark.TextColor3 = C.AccentGlow
+watermark.TextSize = 18
+watermark.Font = Enum.Font.GothamBold
+watermark.ZIndex = 5
+watermark.Parent = header
+
+-- ============ КНОПКА ТЕМЫ ============
+local themeBtn = Instance.new("TextButton")
+themeBtn.Size = UDim2.new(0, 30, 0, 30)
+themeBtn.AnchorPoint = Vector2.new(1, 0)
+themeBtn.Position = UDim2.new(1, -48, 0, 9)
+themeBtn.BackgroundColor3 = C.Panel
+themeBtn.BackgroundTransparency = 0.15
+themeBtn.BorderSizePixel = 0
+themeBtn.Text = "◐"
+themeBtn.TextColor3 = C.AccentGlow
+themeBtn.TextSize = 18
+themeBtn.Font = Enum.Font.GothamBold
+themeBtn.AutoButtonColor = false
+themeBtn.ZIndex = 7
+themeBtn.Parent = header
+Instance.new("UICorner", themeBtn).CornerRadius = UDim.new(0, 8)
+
+local themeStroke = Instance.new("UIStroke")
+themeStroke.Color = C.Accent
+themeStroke.Thickness = 1.5
+themeStroke.Transparency = 0.3
+themeStroke.Parent = themeBtn
+
+themeBtn.MouseEnter:Connect(function()
+    TweenService:Create(themeBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0}):Play()
+    TweenService:Create(themeStroke, TweenInfo.new(0.15), {Transparency = 0}):Play()
+end)
+themeBtn.MouseLeave:Connect(function()
+    TweenService:Create(themeBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0.15}):Play()
+    TweenService:Create(themeStroke, TweenInfo.new(0.15), {Transparency = 0.3}):Play()
+end)
+
+-- ============ КРЕСТИК ============
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.AnchorPoint = Vector2.new(1, 0)
+closeBtn.Position = UDim2.new(1, -12, 0, 9)
+closeBtn.BackgroundColor3 = C.Accent
+closeBtn.BackgroundTransparency = 0.15
+closeBtn.BorderSizePixel = 0
+closeBtn.Text = "×"
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.TextSize = 22
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.AutoButtonColor = false
+closeBtn.ZIndex = 7
+closeBtn.Parent = header
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 8)
+
+local closeStroke = Instance.new("UIStroke")
+closeStroke.Color = Color3.fromRGB(255, 255, 255)
+closeStroke.Thickness = 1
+closeStroke.Transparency = 0.7
+closeStroke.Parent = closeBtn
+
+closeBtn.MouseEnter:Connect(function()
+    TweenService:Create(closeBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0, BackgroundColor3 = C.AccentGlow}):Play()
+    TweenService:Create(closeStroke, TweenInfo.new(0.15), {Transparency = 0}):Play()
+end)
+closeBtn.MouseLeave:Connect(function()
+    TweenService:Create(closeBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0.15, BackgroundColor3 = C.Accent}):Play()
+    TweenService:Create(closeStroke, TweenInfo.new(0.15), {Transparency = 0.7}):Play()
+end)
+
+local sepLine = Instance.new("Frame")
+sepLine.Size = UDim2.new(1, -40, 0, 1)
+sepLine.Position = UDim2.new(0, 20, 0, 48)
+sepLine.BackgroundColor3 = C.Off
+sepLine.BorderSizePixel = 0
+sepLine.BackgroundTransparency = 0.5
+sepLine.ZIndex = 4
+sepLine.Parent = menu
+
+-- ============ ВКЛАДКИ ============
+local tabNames = {"ESP", "FPS", "VISUALS"}
+local tabs = {}
+local activeTab = 1
+
+local tabsFrame = Instance.new("Frame")
+tabsFrame.Size = UDim2.new(1, -30, 0, 32)
+tabsFrame.Position = UDim2.new(0, 15, 0, 56)
+tabsFrame.BackgroundTransparency = 1
+tabsFrame.ZIndex = 4
+tabsFrame.Parent = menu
+
+for i, name in ipairs(tabNames) do
+    local tab = Instance.new("TextButton")
+    tab.Size = UDim2.new(0, 87, 1, 0)
+    tab.Position = UDim2.new(0, (i-1) * 94, 0, 0)
+    tab.BackgroundColor3 = (i == 1) and C.Accent or C.Panel
+    tab.BackgroundTransparency = (i == 1) and 0 or 0.35
+    tab.BorderSizePixel = 0
+    tab.Text = name
+    tab.TextColor3 = (i == 1) and Color3.fromRGB(255, 255, 255) or C.SubText
+    tab.TextSize = 12
+    tab.Font = Enum.Font.GothamBold
+    tab.AutoButtonColor = false
+    tab.ZIndex = 4
+    tab.Parent = tabsFrame
+    Instance.new("UICorner", tab).CornerRadius = UDim.new(0, 8)
+    tabs[i] = tab
+end
+
+-- ============ CONTENT AREA ============
+local contentArea = Instance.new("Frame")
+contentArea.Size = UDim2.new(1, 0, 1, -96)
+contentArea.Position = UDim2.new(0, 0, 0, 96)
+contentArea.BackgroundTransparency = 1
+contentArea.ZIndex = 3
+contentArea.Parent = menu
+
+-- ============ ПРОФИЛЬ ============
+local profile = Instance.new("Frame")
+profile.Size = UDim2.new(0, 220, 0, 180)
+profile.Position = UDim2.new(0, 15, 0, 8)
+profile.BackgroundColor3 = C.Panel
+profile.BackgroundTransparency = 0.35
+profile.BorderSizePixel = 0
+profile.ZIndex = 3
+profile.Parent = contentArea
+Instance.new("UICorner", profile).CornerRadius = UDim.new(0, 10)
+
+local profileStroke = Instance.new("UIStroke")
+profileStroke.Color = C.Accent
+profileStroke.Thickness = 1
+profileStroke.Transparency = 0.7
+profileStroke.Parent = profile
+
+local avatarFrame = Instance.new("Frame")
+avatarFrame.Size = UDim2.new(0, 48, 0, 48)
+avatarFrame.Position = UDim2.new(0.5, -24, 0, 10)
+avatarFrame.BackgroundColor3 = C.BgGrad
+avatarFrame.BorderSizePixel = 0
+avatarFrame.ZIndex = 4
+avatarFrame.Parent = profile
+Instance.new("UICorner", avatarFrame).CornerRadius = UDim.new(1, 0)
+
+local avatar = Instance.new("ImageLabel")
+avatar.Size = UDim2.new(1, 0, 1, 0)
+avatar.BackgroundTransparency = 1
+avatar.ScaleType = Enum.ScaleType.Crop
+avatar.ZIndex = 5
+avatar.Parent = avatarFrame
+Instance.new("UICorner", avatar).CornerRadius = UDim.new(1, 0)
+
+local success, img = pcall(function()
+    return Players:GetUserThumbnailAsync(localPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+end)
+if success and img then
+    avatar.Image = img
+else
+    avatar.Image = PHOTO_ID
+end
+
+local avatarStroke = Instance.new("UIStroke")
+avatarStroke.Color = C.Accent
+avatarStroke.Thickness = 2
+avatarStroke.Parent = avatarFrame
+
+local nameLabel = Instance.new("TextLabel")
+nameLabel.Size = UDim2.new(1, -20, 0, 18)
+nameLabel.Position = UDim2.new(0, 10, 0, 64)
+nameLabel.BackgroundTransparency = 1
+nameLabel.Text = localPlayer.DisplayName
+nameLabel.TextColor3 = C.Text
+nameLabel.TextSize = 14
+nameLabel.Font = Enum.Font.GothamBold
+nameLabel.TextXAlignment = Enum.TextXAlignment.Center
+nameLabel.ZIndex = 4
+nameLabel.Parent = profile
+
+local subLabel = Instance.new("TextLabel")
+subLabel.Size = UDim2.new(1, -20, 0, 12)
+subLabel.Position = UDim2.new(0, 10, 0, 82)
+subLabel.BackgroundTransparency = 1
+subLabel.Text = "@" .. localPlayer.Name
+subLabel.TextColor3 = C.SubText
+subLabel.TextSize = 10
+subLabel.Font = Enum.Font.Gotham
+subLabel.TextXAlignment = Enum.TextXAlignment.Center
+subLabel.ZIndex = 4
+subLabel.Parent = profile
+
+local statusPill = Instance.new("Frame")
+statusPill.Size = UDim2.new(0, 70, 0, 16)
+statusPill.Position = UDim2.new(0.5, -35, 0, 102)
+statusPill.BackgroundColor3 = C.Accent
+statusPill.BackgroundTransparency = 0.2
+statusPill.BorderSizePixel = 0
+statusPill.ZIndex = 4
+statusPill.Parent = profile
+Instance.new("UICorner", statusPill).CornerRadius = UDim.new(1, 0)
+
+local statusTxt = Instance.new("TextLabel")
+statusTxt.Size = UDim2.new(1, 0, 1, 0)
+statusTxt.BackgroundTransparency = 1
+statusTxt.Text = "ACTIVE"
+statusTxt.TextColor3 = Color3.fromRGB(255, 255, 255)
+statusTxt.TextSize = 9
+statusTxt.Font = Enum.Font.GothamBold
+statusTxt.ZIndex = 5
+statusTxt.Parent = statusPill
+
+local statsDivider = Instance.new("Frame")
+statsDivider.Size = UDim2.new(1, -30, 0, 1)
+statsDivider.Position = UDim2.new(0, 15, 0, 128)
+statsDivider.BackgroundColor3 = C.Off
+statsDivider.BorderSizePixel = 0
+statsDivider.BackgroundTransparency = 0.5
+statsDivider.ZIndex = 4
+statsDivider.Parent = profile
+
+local profileFpsTitle = Instance.new("TextLabel")
+profileFpsTitle.Size = UDim2.new(0.5, -20, 0, 10)
+profileFpsTitle.Position = UDim2.new(0, 15, 0, 134)
+profileFpsTitle.BackgroundTransparency = 1
+profileFpsTitle.Text = "FPS"
+profileFpsTitle.TextColor3 = C.SubText
+profileFpsTitle.TextSize = 9
+profileFpsTitle.Font = Enum.Font.GothamBold
+profileFpsTitle.TextXAlignment = Enum.TextXAlignment.Left
+profileFpsTitle.ZIndex = 4
+profileFpsTitle.Parent = profile
+
+local profileFpsValue = Instance.new("TextLabel")
+profileFpsValue.Size = UDim2.new(0.5, -20, 0, 16)
+profileFpsValue.Position = UDim2.new(0, 15, 0, 146)
+profileFpsValue.BackgroundTransparency = 1
+profileFpsValue.Text = "0"
+profileFpsValue.TextColor3 = C.Text
+profileFpsValue.TextSize = 14
+profileFpsValue.Font = Enum.Font.GothamBold
+profileFpsValue.TextXAlignment = Enum.TextXAlignment.Left
+profileFpsValue.ZIndex = 4
+profileFpsValue.Parent = profile
+
+local profilePingTitle = Instance.new("TextLabel")
+profilePingTitle.Size = UDim2.new(0.5, -20, 0, 10)
+profilePingTitle.Position = UDim2.new(0.5, 5, 0, 134)
+profilePingTitle.BackgroundTransparency = 1
+profilePingTitle.Text = "PING"
+profilePingTitle.TextColor3 = C.SubText
+profilePingTitle.TextSize = 9
+profilePingTitle.Font = Enum.Font.GothamBold
+profilePingTitle.TextXAlignment = Enum.TextXAlignment.Left
+profilePingTitle.ZIndex = 4
+profilePingTitle.Parent = profile
+
+local profilePingValue = Instance.new("TextLabel")
+profilePingValue.Size = UDim2.new(0.5, -20, 0, 16)
+profilePingValue.Position = UDim2.new(0.5, 5, 0, 146)
+profilePingValue.BackgroundTransparency = 1
+profilePingValue.Text = "—"
+profilePingValue.TextColor3 = C.Text
+profilePingValue.TextSize = 14
+profilePingValue.Font = Enum.Font.GothamBold
+profilePingValue.TextXAlignment = Enum.TextXAlignment.Left
+profilePingValue.ZIndex = 4
+profilePingValue.Parent = profile
+
+local function setProfileStats(state)
+    statsDivider.Visible = state
+    profileFpsTitle.Visible = state
+    profileFpsValue.Visible = state
+    profilePingTitle.Visible = state
+    profilePingValue.Visible = state
+end
+
+-- ============ CONTAINERS ============
+local contentBox = Instance.new("Frame")
+contentBox.Size = UDim2.new(0, 275, 0, 200)
+contentBox.Position = UDim2.new(0, 250, 0, 8)
+contentBox.BackgroundTransparency = 1
+contentBox.ZIndex = 3
+contentBox.Parent = contentArea
+
+local function makeScroll(parent)
+    local s = Instance.new("ScrollingFrame")
+    s.Size = UDim2.new(1, 0, 1, 0)
+    s.BackgroundTransparency = 1
+    s.BorderSizePixel = 0
+    s.CanvasSize = UDim2.new(0, 0, 0, 0)
+    s.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    s.ScrollBarThickness = 7
+    s.ScrollBarImageColor3 = C.Accent
+    s.ScrollBarImageTransparency = 0
+    s.ScrollingDirection = Enum.ScrollingDirection.Y
+    s.ElasticBehavior = Enum.ElasticBehavior.WhenScrollable
+    s.ZIndex = 3
+    s.Parent = parent
+
+    local sp = Instance.new("Frame")
+    sp.Size = UDim2.new(1, 0, 0, 40)
+    sp.Position = UDim2.new(0, 0, 0, 680)
+    sp.BackgroundTransparency = 1
+    sp.ZIndex = 3
+    sp.Parent = s
+    return s
+end
+
+local contentESP = makeScroll(contentBox)
+contentESP.Visible = true
+
+local contentFPS = makeScroll(contentBox)
+contentFPS.Visible = false
+
+local contentVISUALS = makeScroll(contentBox)
+contentVISUALS.Visible = false
+
+local contents = {contentESP, contentFPS, contentVISUALS}
+
+local function switchTab(index)
+    activeTab = index
+    for i, c in ipairs(contents) do
+        c.Visible = (i == index)
+    end
+    for i, t in ipairs(tabs) do
+        local active = (i == index)
+        TweenService:Create(t, TweenInfo.new(0.15), {
+            BackgroundColor3 = active and C.Accent or C.Panel,
+            BackgroundTransparency = active and 0 or 0.35,
+            TextColor3 = active and Color3.fromRGB(255, 255, 255) or C.SubText,
+        }):Play()
+    end
+end
+
+for i, tab in ipairs(tabs) do
+    tab.MouseButton1Click:Connect(function()
+        switchTab(i)
+    end)
+end
+
+-- ============ CREATE ROW ============
+local allSwitches = {}
+
+local function createRow(parent, yPos, labelText, defaultOn, onChange)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, 0, 0, 56)
+    row.Position = UDim2.new(0, 0, 0, yPos)
+    row.BackgroundColor3 = C.Panel
+    row.BackgroundTransparency = 0.35
+    row.BorderSizePixel = 0
+    row.ZIndex = 3
+    row.Parent = parent
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
+
+    local rStroke = Instance.new("UIStroke")
+    rStroke.Color = C.Off
+    rStroke.Thickness = 1
+    rStroke.Transparency = 0.6
+    rStroke.Parent = row
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -90, 1, 0)
+    lbl.Position = UDim2.new(0, 14, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = labelText
+    lbl.TextColor3 = C.Text
+    lbl.TextSize = 13
+    lbl.Font = Enum.Font.GothamMedium
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 4
+    lbl.Parent = row
+
+    local sw = Instance.new("TextButton")
+    sw.Size = UDim2.new(0, 46, 0, 24)
+    sw.Position = UDim2.new(1, -58, 0.5, -12)
+    sw.BackgroundColor3 = defaultOn and C.Accent or C.Off
+    sw.BorderSizePixel = 0
+    sw.Text = ""
+    sw.AutoButtonColor = false
+    sw.ZIndex = 4
+    sw.Parent = row
+    Instance.new("UICorner", sw).CornerRadius = UDim.new(1, 0)
+
+    local kn = Instance.new("Frame")
+    kn.Size = UDim2.new(0, 18, 0, 18)
+    kn.Position = defaultOn and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+    kn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    kn.BorderSizePixel = 0
+    kn.ZIndex = 5
+    kn.Parent = sw
+    Instance.new("UICorner", kn).CornerRadius = UDim.new(1, 0)
+
+    local kShadow = Instance.new("UIStroke")
+    kShadow.Color = Color3.fromRGB(0, 0, 0)
+    kShadow.Thickness = 1
+    kShadow.Transparency = 0.7
+    kShadow.Parent = kn
+
+    local ft = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local state = defaultOn
+
+    sw.MouseButton1Click:Connect(function()
+        state = not state
+        local tPos = state and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+        local tCol = state and C.Accent or C.Off
+        TweenService:Create(kn, ft, {Position = tPos}):Play()
+        TweenService:Create(sw, ft, {BackgroundColor3 = tCol}):Play()
+        onChange(state)
+    end)
+
+    sw.MouseEnter:Connect(function()
+        TweenService:Create(rStroke, ft, {Color = C.Accent, Transparency = 0.3}):Play()
+    end)
+    sw.MouseLeave:Connect(function()
+        TweenService:Create(rStroke, ft, {Color = C.Off, Transparency = 0.6}):Play()
+    end)
+
+    table.insert(allSwitches, {
+        row = row,
+        stroke = rStroke,
+        label = lbl,
+        sw = sw,
+        getState = function() return state end,
+    })
+end
+
+-- ============ CREATE COLOR ROW ============
+local allColorRows = {}
+
+local function createColorRow(parent, yPos, labelText)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, 0, 0, 56)
+    row.Position = UDim2.new(0, 0, 0, yPos)
+    row.BackgroundColor3 = C.Panel
+    row.BackgroundTransparency = 0.35
+    row.BorderSizePixel = 0
+    row.ZIndex = 3
+    row.Parent = parent
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
+
+    local rStroke = Instance.new("UIStroke")
+    rStroke.Color = C.Off
+    rStroke.Thickness = 1
+    rStroke.Transparency = 0.6
+    rStroke.Parent = row
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -90, 1, 0)
+    lbl.Position = UDim2.new(0, 14, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = labelText
+    lbl.TextColor3 = C.Text
+    lbl.TextSize = 13
+    lbl.Font = Enum.Font.GothamMedium
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 4
+    lbl.Parent = row
+
+    local colorBtn = Instance.new("TextButton")
+    colorBtn.Size = UDim2.new(0, 46, 0, 24)
+    colorBtn.Position = UDim2.new(1, -58, 0.5, -12)
+    colorBtn.BackgroundColor3 = OUTLINE_COLORS[currentOutlineIndex].color
+    colorBtn.BorderSizePixel = 0
+    colorBtn.Text = ""
+    colorBtn.AutoButtonColor = false
+    colorBtn.ZIndex = 4
+    colorBtn.Parent = row
+    Instance.new("UICorner", colorBtn).CornerRadius = UDim.new(0, 6)
+
+    local cStroke = Instance.new("UIStroke")
+    cStroke.Color = Color3.fromRGB(0, 0, 0)
+    cStroke.Thickness = 1
+    cStroke.Transparency = 0.6
+    cStroke.Parent = colorBtn
+
+    colorBtn.MouseButton1Click:Connect(function()
+        currentOutlineIndex = currentOutlineIndex + 1
+        if currentOutlineIndex > #OUTLINE_COLORS then currentOutlineIndex = 1 end
+        TweenService:Create(colorBtn, TweenInfo.new(0.15), {
+            BackgroundColor3 = OUTLINE_COLORS[currentOutlineIndex].color
+        }):Play()
+        refreshOutlineColor()
+    end)
+
+    colorBtn.MouseEnter:Connect(function()
+        TweenService:Create(rStroke, TweenInfo.new(0.15), {Color = C.Accent, Transparency = 0.3}):Play()
+    end)
+    colorBtn.MouseLeave:Connect(function()
+        TweenService:Create(rStroke, TweenInfo.new(0.15), {Color = C.Off, Transparency = 0.6}):Play()
+    end)
+
+    table.insert(allColorRows, {
+        row = row,
+        stroke = rStroke,
+        label = lbl,
+        colorBtn = colorBtn,
+    })
+end
+
+-- ============ ESP ROWS ============
+createRow(contentESP, 0,   "ESP — Подсветка",      false, function(on) setESP(on) end)
+createRow(contentESP, 62,  "Ники над игроками",    false, function(on) setNametags(on) end)
+createRow(contentESP, 124, "Дистанция до игроков", false, function(on) showDistance = on end)
+createColorRow(contentESP, 186, "Цвет обводки")
+
+-- ============ FPS ROWS ============
+local fpsRoot = Instance.new("Frame")
+fpsRoot.Name = "FpsWindow"
+fpsRoot.AnchorPoint = Vector2.new(0.5, 0)
+fpsRoot.Size = UDim2.new(0, 140, 0, 46)
+fpsRoot.Position = UDim2.new(0.5, 0, 0, 10)
+fpsRoot.BackgroundColor3 = C.Bg
+fpsRoot.BackgroundTransparency = 0.15
+fpsRoot.BorderSizePixel = 0
+fpsRoot.Visible = false
+fpsRoot.ZIndex = 10
+fpsRoot.Parent = screenGui
+Instance.new("UICorner", fpsRoot).CornerRadius = UDim.new(0, 10)
+
+local fpsStroke = Instance.new("UIStroke")
+fpsStroke.Color = C.Accent
+fpsStroke.Thickness = 1.5
+fpsStroke.Transparency = 0.4
+fpsStroke.Parent = fpsRoot
+
+local fpsAccent = Instance.new("Frame")
+fpsAccent.Size = UDim2.new(0, 3, 1, -12)
+fpsAccent.Position = UDim2.new(0, 0, 0, 6)
+fpsAccent.BackgroundColor3 = C.Accent
+fpsAccent.BorderSizePixel = 0
+fpsAccent.ZIndex = 11
+fpsAccent.Parent = fpsRoot
+Instance.new("UICorner", fpsAccent).CornerRadius = UDim.new(1, 0)
+
+local fpsTitle = Instance.new("TextLabel")
+fpsTitle.Size = UDim2.new(1, -20, 0, 14)
+fpsTitle.Position = UDim2.new(0, 12, 0, 5)
+fpsTitle.BackgroundTransparency = 1
+fpsTitle.Text = "FPS"
+fpsTitle.TextColor3 = C.SubText
+fpsTitle.TextSize = 10
+fpsTitle.Font = Enum.Font.GothamBold
+fpsTitle.TextXAlignment = Enum.TextXAlignment.Left
+fpsTitle.ZIndex = 11
+fpsTitle.Parent = fpsRoot
+
+local fpsLabel = Instance.new("TextLabel")
+fpsLabel.Size = UDim2.new(1, -20, 0, 20)
+fpsLabel.Position = UDim2.new(0, 12, 0, 20)
+fpsLabel.BackgroundTransparency = 1
+fpsLabel.Text = "0"
+fpsLabel.TextColor3 = C.Text
+fpsLabel.TextSize = 18
+fpsLabel.Font = Enum.Font.GothamBold
+fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
+fpsLabel.ZIndex = 11
+fpsLabel.Parent = fpsRoot
+
+enableDrag(fpsRoot, fpsRoot, nil)
+
+createRow(contentFPS, 0,  "Счётчик FPS (окно)", false, function(on) fpsRoot.Visible = on end)
+createRow(contentFPS, 62, "FPS/PING в профиле", true,  function(on) setProfileStats(on) end)
+createRow(contentFPS, 124, "Anti-AFK (Защита)", false, function(on) antiAfkEnabled = on end)
+
+-- ============ VISUALS ============
+local themeBtnBig = Instance.new("TextButton")
+themeBtnBig.Size = UDim2.new(1, 0, 0, 56)
+themeBtnBig.Position = UDim2.new(0, 0, 0, 0)
+themeBtnBig.BackgroundColor3 = C.Panel
+themeBtnBig.BackgroundTransparency = 0.35
+themeBtnBig.BorderSizePixel = 0
+themeBtnBig.Text = ""
+themeBtnBig.AutoButtonColor = false
+themeBtnBig.ZIndex = 3
+themeBtnBig.Parent = contentVISUALS
+Instance.new("UICorner", themeBtnBig).CornerRadius = UDim.new(0, 10)
+
+local themeBtnBigStroke = Instance.new("UIStroke")
+themeBtnBigStroke.Color = C.Off
+themeBtnBigStroke.Thickness = 1
+themeBtnBigStroke.Transparency = 0.6
+themeBtnBigStroke.Parent = themeBtnBig
+
+local themeBtnBigIcon = Instance.new("TextLabel")
+themeBtnBigIcon.Size = UDim2.new(0, 40, 1, 0)
+themeBtnBigIcon.Position = UDim2.new(0, 10, 0, 0)
+themeBtnBigIcon.BackgroundTransparency = 1
+themeBtnBigIcon.Text = "◐"
+themeBtnBigIcon.TextColor3 = C.AccentGlow
+themeBtnBigIcon.TextSize = 24
+themeBtnBigIcon.Font = Enum.Font.GothamBold
+themeBtnBigIcon.ZIndex = 4
+themeBtnBigIcon.Parent = themeBtnBig
+
+local themeBtnBigText = Instance.new("TextLabel")
+themeBtnBigText.Size = UDim2.new(1, -70, 1, 0)
+themeBtnBigText.Position = UDim2.new(0, 56, 0, 0)
+themeBtnBigText.BackgroundTransparency = 1
+themeBtnBigText.Text = "Тема: " .. C.name
+themeBtnBigText.TextColor3 = C.Text
+themeBtnBigText.TextSize = 14
+themeBtnBigText.Font = Enum.Font.GothamBold
+themeBtnBigText.TextXAlignment = Enum.TextXAlignment.Left
+themeBtnBigText.ZIndex = 4
+themeBtnBigText.Parent = themeBtnBig
+
+createRow(contentVISUALS, 62, "Размытие фона", true, function(on) setBlurEnabled(on) end)
+createRow(contentVISUALS, 124, "Трейлы от игроков", false, function(on) setTrails(on) end)
+
+-- ============ STEPPERS ============
+local allSteppers = {}
+
+local function createStepperRow(parent, yPos, labelText, getText, onClick)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, 0, 0, 56)
+    row.Position = UDim2.new(0, 0, 0, yPos)
+    row.BackgroundColor3 = C.Panel
+    row.BackgroundTransparency = 0.35
+    row.BorderSizePixel = 0
+    row.ZIndex = 3
+    row.Parent = parent
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
+
+    local rStroke = Instance.new("UIStroke")
+    rStroke.Color = C.Off
+    rStroke.Thickness = 1
+    rStroke.Transparency = 0.6
+    rStroke.Parent = row
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -100, 1, 0)
+    lbl.Position = UDim2.new(0, 14, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = labelText
+    lbl.TextColor3 = C.Text
+    lbl.TextSize = 13
+    lbl.Font = Enum.Font.GothamMedium
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 4
+    lbl.Parent = row
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 78, 0, 24)
+    btn.Position = UDim2.new(1, -90, 0.5, -12)
+    btn.BackgroundColor3 = C.Accent
+    btn.BackgroundTransparency = 0.15
+    btn.BorderSizePixel = 0
+    btn.Text = getText()
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 11
+    btn.Font = Enum.Font.GothamBold
+    btn.AutoButtonColor = false
+    btn.ZIndex = 4
+    btn.Parent = row
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+    local bStroke = Instance.new("UIStroke")
+    bStroke.Color = Color3.fromRGB(255, 255, 255)
+    bStroke.Thickness = 1
+    bStroke.Transparency = 0.7
+    bStroke.Parent = btn
+
+    btn.MouseButton1Click:Connect(function()
+        onClick()
+        btn.Text = getText() -- Принудительно обновляем текст
+    end)
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(rStroke, TweenInfo.new(0.15), {Color = C.Accent, Transparency = 0.3}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(rStroke, TweenInfo.new(0.15), {Color = C.Off, Transparency = 0.6}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0.15}):Play()
+    end)
+
+    table.insert(allSteppers, {
+        row = row,
+        stroke = rStroke,
+        label = lbl,
+        btn = btn,
+    })
+    return btn
+end
+
+createStepperRow(contentVISUALS, 186, "Длина трейлов", function()
+    return TRAIL_LENGTHS[currentTrailLengthIndex].name
+end, function()
+    currentTrailLengthIndex = currentTrailLengthIndex + 1
+    if currentTrailLengthIndex > #TRAIL_LENGTHS then currentTrailLengthIndex = 1 end
+    refreshTrailLength()
+end)
+
+-- ИСПРАВЛЕННЫЙ БЛОК ЦВЕТА ТРЕЙЛОВ
+local trailColorBtn
+trailColorBtn = createStepperRow(contentVISUALS, 248, "Цвет трейлов", function()
+    return TRAIL_COLORS[currentTrailColorIndex].name
+end, function()
+    currentTrailColorIndex = currentTrailColorIndex + 1
+    if currentTrailColorIndex > #TRAIL_COLORS then currentTrailColorIndex = 1 end
+    refreshTrailColor()
+    trailColorBtn.BackgroundColor3 = TRAIL_COLORS[currentTrailColorIndex].color
+end)
+trailColorBtn.BackgroundColor3 = TRAIL_COLORS[currentTrailColorIndex].color
+
+createStepperRow(contentVISUALS, 310, "Небо", function()
+    return SKY_PRESETS[currentSkyIndex].name
+end, function()
+    currentSkyIndex = currentSkyIndex + 1
+    if currentSkyIndex > #SKY_PRESETS then currentSkyIndex = 1 end
+    applySky(SKY_PRESETS[currentSkyIndex])
+end)
+
+createRow(contentVISUALS, 372, "Частицы в пространстве", false, function(on) 
+    particlesEnabled = on
+    updateParticles()
+end)
+
+createRow(contentVISUALS, 434, "Свечение (Bloom)", false, function(on) 
+    bloomEnabled = on
+    updateParticles()
+end)
+
+createStepperRow(contentVISUALS, 496, "Плотность частиц", function()
+    return PARTICLE_DENSITIES[currentParticleDensityIndex].name
+end, function()
+    currentParticleDensityIndex = currentParticleDensityIndex + 1
+    if currentParticleDensityIndex > #PARTICLE_DENSITIES then currentParticleDensityIndex = 1 end
+    updateParticles()
+end)
+
+-- ИСПРАВЛЕННЫЙ БЛОК ЦВЕТА ЧАСТИЦ
+local particleColorBtn
+particleColorBtn = createStepperRow(contentVISUALS, 558, "Цвет частиц", function()
+    return PARTICLE_COLORS[currentParticleColorIndex].name
+end, function()
+    currentParticleColorIndex = currentParticleColorIndex + 1
+    if currentParticleColorIndex > #PARTICLE_COLORS then currentParticleColorIndex = 1 end
+    updateParticles()
+    particleColorBtn.BackgroundColor3 = PARTICLE_COLORS[currentParticleColorIndex].btnColor
+end)
+particleColorBtn.BackgroundColor3 = PARTICLE_COLORS[currentParticleColorIndex].btnColor
+
+createStepperRow(contentVISUALS, 620, "Размер частиц", function()
+    return PARTICLE_SIZES[currentParticleSizeIndex].name
+end, function()
+    currentParticleSizeIndex = currentParticleSizeIndex + 1
+    if currentParticleSizeIndex > #PARTICLE_SIZES then currentParticleSizeIndex = 1 end
+    updateParticles()
+end)
+
+-- ============ RESIZE HANDLE ============
+local resizeHandle = Instance.new("TextButton")
+resizeHandle.Size = UDim2.new(0, 22, 0, 22)
+resizeHandle.Position = UDim2.new(1, -22, 1, -22)
+resizeHandle.BackgroundColor3 = C.Accent
+resizeHandle.BackgroundTransparency = 0.15
+resizeHandle.BorderSizePixel = 0
+resizeHandle.Text = "◢"
+resizeHandle.TextColor3 = Color3.fromRGB(255, 255, 255)
+resizeHandle.TextSize = 14
+resizeHandle.Font = Enum.Font.GothamBold
+resizeHandle.AutoButtonColor = false
+resizeHandle.ZIndex = 20
+resizeHandle.Parent = menu
+Instance.new("UICorner", resizeHandle).CornerRadius = UDim.new(0, 6)
+
+local rStrokeH = Instance.new("UIStroke")
+rStrokeH.Color = Color3.fromRGB(255, 255, 255)
+rStrokeH.Thickness = 1.5
+rStrokeH.Transparency = 0.6
+rStrokeH.Parent = resizeHandle
+
+local resizing = false
+local resizeStart, startSize
+
+resizeHandle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        resizing = true
+        resizeStart = input.Position
+        startSize = menu.Size
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if not resizing then return end
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        local delta = input.Position - resizeStart
+        local newW = math.clamp(startSize.X.Offset + delta.X, 400, 900)
+        local newH = math.clamp(startSize.Y.Offset + delta.Y, 280, 800)
+        local newSize = UDim2.new(0, newW, 0, newH)
+        menu.Size = newSize
+        OPEN_SIZE = newSize
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        resizing = false
+    end
+end)
+
+resizeHandle.MouseEnter:Connect(function()
+    TweenService:Create(rStrokeH, TweenInfo.new(0.15), {Transparency = 0}):Play()
+    TweenService:Create(resizeHandle, TweenInfo.new(0.15), {BackgroundTransparency = 0}):Play()
+end)
+resizeHandle.MouseLeave:Connect(function()
+    TweenService:Create(rStrokeH, TweenInfo.new(0.15), {Transparency = 0.6}):Play()
+    TweenService:Create(resizeHandle, TweenInfo.new(0.15), {BackgroundTransparency = 0.15}):Play()
+end)
+
+-- ============ APPLY THEME ============
+local function applyTheme(theme)
+    C = theme
+
+    toggleBtn.BackgroundColor3 = theme.Panel
+    toggleStroke.Color = theme.Accent
+    icon.TextColor3 = theme.AccentGlow
+    btnText.TextColor3 = theme.Text
+    accentBar.BackgroundColor3 = theme.Accent
+
+    menu.BackgroundColor3 = theme.Bg
+    menuStroke.Color = theme.Accent
+
+    if theme.isLight then
+        darkOverlay.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        darkOverlay.BackgroundTransparency = 0.35
+        bgGrad.Transparency = NumberSequence.new(0.95)
+    else
+        darkOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        darkOverlay.BackgroundTransparency = 0.45
+        bgGrad.Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 0.55),
+            NumberSequenceKeypoint.new(0.5, 0.6),
+            NumberSequenceKeypoint.new(1, 0.35),
+        })
+    end
+    bgGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(0.55, Color3.fromRGB(60, 60, 70)),
+        ColorSequenceKeypoint.new(1, theme.Accent),
+    })
+
+    watermark.TextColor3 = theme.AccentGlow
+    watermarkShadow.TextColor3 = theme.Bg
+
+    sepLine.BackgroundColor3 = theme.Off
+
+    themeBtn.BackgroundColor3 = theme.Panel
+    themeBtn.TextColor3 = theme.AccentGlow
+    themeStroke.Color = theme.Accent
+
+    closeBtn.BackgroundColor3 = theme.Accent
+
+    for i, t in ipairs(tabs) do
+        if i == activeTab then
+            t.BackgroundColor3 = theme.Accent
+            t.BackgroundTransparency = 0
+            t.TextColor3 = Color3.fromRGB(255, 255, 255)
+        else
+            t.BackgroundColor3 = theme.Panel
+            t.BackgroundTransparency = 0.35
+            t.TextColor3 = theme.SubText
+        end
+    end
+
+    profile.BackgroundColor3 = theme.Panel
+    profileStroke.Color = theme.Accent
+    avatarFrame.BackgroundColor3 = theme.BgGrad
+    avatarStroke.Color = theme.Accent
+    nameLabel.TextColor3 = theme.Text
+    subLabel.TextColor3 = theme.SubText
+    statusPill.BackgroundColor3 = theme.Accent
+    statsDivider.BackgroundColor3 = theme.Off
+    profileFpsTitle.TextColor3 = theme.SubText
+    profilePingTitle.TextColor3 = theme.SubText
+
+    contentESP.ScrollBarImageColor3 = theme.Accent
+    contentFPS.ScrollBarImageColor3 = theme.Accent
+    contentVISUALS.ScrollBarImageColor3 = theme.Accent
+
+    fpsRoot.BackgroundColor3 = theme.Bg
+    fpsStroke.Color = theme.Accent
+    fpsAccent.BackgroundColor3 = theme.Accent
+    fpsTitle.TextColor3 = theme.SubText
+    fpsLabel.TextColor3 = theme.Text
+
+    themeBtnBig.BackgroundColor3 = theme.Panel
+    themeBtnBigStroke.Color = theme.Off
+    themeBtnBigIcon.TextColor3 = theme.AccentGlow
+    themeBtnBigText.TextColor3 = theme.Text
+    themeBtnBigText.Text = "Тема: " .. theme.name
+
+    resizeHandle.BackgroundColor3 = theme.Accent
+
+    for _, s in ipairs(allSwitches) do
+        s.row.BackgroundColor3 = theme.Panel
+        s.stroke.Color = theme.Off
+        s.label.TextColor3 = theme.Text
+        s.sw.BackgroundColor3 = s.getState() and theme.Accent or theme.Off
+    end
+
+    for _, cr in ipairs(allColorRows) do
+        cr.row.BackgroundColor3 = theme.Panel
+        cr.stroke.Color = theme.Off
+        cr.label.TextColor3 = theme.Text
+    end
+
+    for _, st in ipairs(allSteppers) do
+        st.row.BackgroundColor3 = theme.Panel
+        st.stroke.Color = theme.Off
+        st.label.TextColor3 = theme.Text
+        st.btn.BackgroundColor3 = theme.Accent
+    end
+    if trailColorBtn then
+        trailColorBtn.BackgroundColor3 = TRAIL_COLORS[currentTrailColorIndex].color
+    end
+    if particleColorBtn then
+        particleColorBtn.BackgroundColor3 = PARTICLE_COLORS[currentParticleColorIndex].btnColor
+    end
+
+    if espEnabled then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character then
+                local h = p.Character:FindFirstChild("PlayerHighlight")
+                if h then h.FillColor = theme.Accent end
+            end
+        end
+    end
+end
+
+local function nextTheme()
+    currentThemeIndex = currentThemeIndex + 1
+    if currentThemeIndex > #THEMES then currentThemeIndex = 1 end
+    applyTheme(THEMES[currentThemeIndex])
+end
+
+themeBtn.MouseButton1Click:Connect(nextTheme)
+themeBtnBig.MouseButton1Click:Connect(nextTheme)
+
+-- ==========================================================
+-- ОБНОВЛЕНИЕ ДИСТАНЦИЙ
+-- ==========================================================
+local function updateDistances()
+    local lp = localPlayer.Character
+    local lpRoot = lp and lp:FindFirstChild("HumanoidRootPart")
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= localPlayer and p.Character then
+            local head = p.Character:FindFirstChild("Head")
+            if head then
+                local tag = head:FindFirstChild("CustomNameTag")
+                if tag then
+                    local dl = tag:FindFirstChild("DistanceLabel")
+                    if dl then
+                        if showDistance and lpRoot then
+                            local dist = (lpRoot.Position - head.Position).Magnitude
+                            dl.Text = math.floor(dist * 0.28) .. " m"
+                            dl.Visible = true
+                        else
+                            dl.Visible = false
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- ============ FPS / PING UPDATE ============
+local frames = 0
+local lastUpdate = os.clock()
+
+local function getPing()
+    local ok, v = pcall(function()
+        return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+    end)
+    if ok and typeof(v) == "number" then return math.floor(v) end
+    return nil
+end
+
+RunService.RenderStepped:Connect(function()
+    frames = frames + 1
+    local now = os.clock()
+    if now - lastUpdate >= 0.5 then
+        local fps = math.floor(frames / (now - lastUpdate) + 0.5)
+        local fpsColor
+        if fps >= 50 then
+            fpsColor = Color3.fromRGB(120, 255, 120)
+        elseif fps >= 30 then
+            fpsColor = Color3.fromRGB(255, 220, 100)
+        else
+            fpsColor = Color3.fromRGB(255, 70, 80)
+        end
+
+        if fpsRoot.Visible then
+            fpsLabel.Text = tostring(fps)
+            fpsLabel.TextColor3 = fpsColor
+        end
+        profileFpsValue.Text = tostring(fps)
+        profileFpsValue.TextColor3 = fpsColor
+
+        local ping = getPing()
+        local pingText = "—"
+        if ping then
+            pingText = tostring(ping) .. "ms"
+            if ping < 60 then
+                profilePingValue.TextColor3 = Color3.fromRGB(120, 255, 120)
+            elseif ping < 120 then
+                profilePingValue.TextColor3 = Color3.fromRGB(255, 220, 100)
+            else
+                profilePingValue.TextColor3 = Color3.fromRGB(255, 70, 80)
+            end
+        else
+            profilePingValue.TextColor3 = C.SubText
+        end
+        profilePingValue.Text = pingText
+
+        updateDistances()
+
+        frames = 0
+        lastUpdate = now
+    end
+end)
+
+-- ============ OPEN / CLOSE ============
+local CLOSED_SIZE = UDim2.new(0, 0, 0, 0)
+local openTween = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+local closeTween = TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.In)
+local fastTween = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+local function openMenu()
+    isMenuOpen = true
+    menu.Visible = true
+    TweenService:Create(menu, openTween, {Size = OPEN_SIZE}):Play()
+
+    local fadeOut = TweenService:Create(toggleCanvas, fastTween, {GroupTransparency = 1})
+    fadeOut:Play()
+    fadeOut.Completed:Connect(function()
+        if isMenuOpen then toggleCanvas.Visible = false end
+    end)
+
+    setBlur(true)
+end
+
+local function closeMenu()
+    isMenuOpen = false
+    TweenService:Create(menu, closeTween, {Size = CLOSED_SIZE}):Play()
+    toggleCanvas.Visible = true
+    TweenService:Create(toggleCanvas, fastTween, {GroupTransparency = 0}):Play()
+    setBlur(false)
+end
+
+closeBtn.MouseButton1Click:Connect(closeMenu)
+
+toggleBtn.MouseEnter:Connect(function()
+    TweenService:Create(toggleStroke, fastTween, {Transparency = 0}):Play()
+end)
+toggleBtn.MouseLeave:Connect(function()
+    TweenService:Create(toggleStroke, fastTween, {Transparency = 0.3}):Play()
+end)
+
+enableDrag(toggleBtn, toggleCanvas, function()
+    if not isMenuOpen then openMenu() end
+end)
+
+-- ==========================================================
+-- DRAG ПО ВСЕЙ ПЛОЩАДИ МЕНЮ
+-- ==========================================================
+local menuDragActive = false
+local menuDragStart
+local menuDragStartPos
+
+local function isOverInteractiveButton(pos)
+    for _, obj in ipairs(menu:GetDescendants()) do
+        if obj:IsA("GuiButton") and obj.Visible and obj.Active ~= false then
+            local ap = obj.AbsolutePosition
+            local as = obj.AbsoluteSize
+            if pos.X >= ap.X and pos.X <= ap.X + as.X
+            and pos.Y >= ap.Y and pos.Y <= ap.Y + as.Y then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType ~= Enum.UserInputType.MouseButton1
+    and input.UserInputType ~= Enum.UserInputType.Touch then return end
+    if not isMenuOpen or not menu.Visible then return end
+
+    local mp = input.Position
+    local ap = menu.AbsolutePosition
+    local as = menu.AbsoluteSize
+    if mp.X < ap.X or mp.X > ap.X + as.X
+    or mp.Y < ap.Y or mp.Y > ap.Y + as.Y then return end
+
+    if isOverInteractiveButton(mp) then return end
+
+    menuDragActive = true
+    menuDragStart = input.Position
+    menuDragStartPos = menu.Position
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if not menuDragActive then return end
+    if input.UserInputType ~= Enum.UserInputType.MouseMovement
+    and input.UserInputType ~= Enum.UserInputType.Touch then return end
+    local delta = input.Position - menuDragStart
+    menu.Position = UDim2.new(
+        menuDragStartPos.X.Scale, menuDragStartPos.X.Offset + delta.X,
+        menuDragStartPos.Y.Scale, menuDragStartPos.Y.Offset + delta.Y
+    )
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        menuDragActive = false
+    end
+end)
